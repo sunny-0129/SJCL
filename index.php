@@ -136,7 +136,7 @@
         <h1>数据处理工具</h1>
 
         <form action="process.php" method="POST">
-            <label for="inputData">请输入逗号分隔的数据：</label>
+            <label for="inputData">请输入要处理的数据：</label>
             <textarea name="inputData" id="inputData" rows="10" cols="50" placeholder="请输入逗号分隔的数据"></textarea>
 
             <!-- 新添加的容器，用于将两个勾选框放在同一行 -->

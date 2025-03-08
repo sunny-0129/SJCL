@@ -129,16 +129,35 @@
             margin-top: 15px;
             margin-bottom: 15px; /* 适当的上下间距 */
         }
+        
+        
+        .Convert {
+            display: block;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 15px;
+            width: 100%;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .Convert:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+   <div class="container">
         <h1>数据处理工具</h1>
 
-        <form action="process.php" method="POST">
+        <form id="dataForm">
             <textarea name="inputData" id="inputData" rows="10" cols="50" placeholder="请输入需要处理的数据"></textarea>
 
-            <!-- 新添加的容器，用于将两个勾选框放在同一行 -->
             <div class="checkboxes-wrapper">
                 <div class="checkbox-container">
                     <input type="checkbox" name="commaSeparated" id="commaSeparated">
@@ -150,34 +169,21 @@
                 </div>
             </div>
 
-            <!-- 隐藏的位数输入框，只有勾选时显示 -->
             <div class="extract-length-container" id="extractLengthContainer">
                 <label for="extractLength">请输入要提取的位数：</label>
                 <input type="number" id="extractLength" name="extractLength" min="1" placeholder="例如：7">
             </div>
 
-            <input type="submit" value="转换">
+            <button type="button" id="processButton" class="Convert">转换</button>
         </form>
 
-        <?php
-        if (isset($_GET['result'])) {
-            // 显示转换后的结果
-            echo '<div class="result-section">';
-            echo '<h3>转换结果：</h3>';
-            echo '<textarea readonly>' . htmlspecialchars($_GET['result']) . '</textarea>';
-            // 显示下载按钮
-            echo '<form action="download.php" method="POST">';
-            echo '<input type="hidden" name="csv_data" value="' . htmlspecialchars($_GET['result']) . '">';
-            echo '<button type="submit" class="download-btn">下载 CSV 文件</button>';
-            echo '</form>';
-            echo '</div>';
-        }
+        <div id="resultSection" class="result-section" style="display: none;">
+            <h3>转换结果：</h3>
+            <textarea id="resultText" readonly></textarea>
+            <button id="downloadBtn" class="download-btn" style="display: none;">下载 CSV 文件</button>
+        </div>
 
-        // 检查是否有错误信息
-        if (isset($_GET['error'])) {
-            echo '<p class="error-message">' . htmlspecialchars($_GET['error']) . '</p>';
-        }
-        ?>
+        <p id="errorMessage" class="error-message" style="display: none;"></p>
     </div>
 
     <script>
@@ -193,6 +199,48 @@
                 extractLengthContainer.style.display = 'none';
             }
         }
+
+        // 处理数据并存储到浏览器
+        document.getElementById('processButton').addEventListener('click', function() {
+            const inputData = document.getElementById('inputData').value;
+            const commaSeparated = document.getElementById('commaSeparated').checked;
+            const extractData = document.getElementById('extractData').checked;
+            const extractLength = document.getElementById('extractLength').value;
+
+            // 处理数据：逗号分隔转行
+            let resultData = inputData;
+            if (commaSeparated) {
+                resultData = resultData.split(',').join('\n');
+            }
+
+            // 处理位数提取
+            if (extractData && extractLength) {
+                resultData = resultData.split('\n').map(line => {
+                    return line.substring(0, extractLength);
+                }).join('\n');
+            }
+
+            // 存储结果到 localStorage
+            localStorage.setItem('processedData', resultData);
+
+            // 显示结果并提供下载按钮
+            document.getElementById('resultSection').style.display = 'block';
+            document.getElementById('resultText').value = resultData;
+            document.getElementById('downloadBtn').style.display = 'inline-block';
+            document.getElementById('errorMessage').style.display = 'none';
+        });
+
+        // 下载 CSV 文件
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            const data = localStorage.getItem('processedData');
+            const blob = new Blob([data], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'processed_data.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
     </script>
 </body>
 </html>
